@@ -13,17 +13,17 @@ def typeA(opcode,file_read_words):
     reg3=reg_addr[file_read_words[3]]
 
 
-    binary="00000"+unused+reg1+reg2+reg3
+    binary="00000"+"_"+unused+"_"+reg1+"_"+reg2+"_"+reg3
 
 
 def typeE(opcode,file_read_words,mem_addr):
 
     unused="0000"
 
-    binary=opcode+unused+mem_addr
+    binary=opcode+"_"+unused+"_"+mem_addr 
 
 def typeF(opcode):
 
     unused="00000000000"
 
-    binary=opcode+unused
+    binary=opcode+"_"+unused
