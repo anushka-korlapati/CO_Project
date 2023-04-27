@@ -4,7 +4,7 @@ file_read_words=["add","R1","R2","R3"]
 
 
 
-def typea(opcode,file_read_words):
+def typeA(opcode,file_read_words):
 
     unused="00"
 
@@ -15,3 +15,15 @@ def typea(opcode,file_read_words):
 
     binary="00000"+unused+reg1+reg2+reg3
 
+
+def typeE(opcode,file_read_words,mem_addr):
+
+    unused="0000"
+
+    binary=opcode+unused+mem_addr
+
+def typeF(opcode):
+
+    unused="00000000000"
+
+    binary=opcode+unused
