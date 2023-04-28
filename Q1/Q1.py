@@ -23,5 +23,6 @@ def Type_D(file_read_words, memaddr):
 def Type_E(memaddr):
     return "0000" + memaddr
 
-def Type_F():
+def hlt():
     return "00000000000"
+
