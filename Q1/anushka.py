@@ -27,3 +27,22 @@ def typeF(opcode):
     unused="00000000000"
 
     binary=opcode+"_"+unused
+
+#flag semantics
+
+flag_unused = "000000000000"
+
+if file_read_words[0]=="cmp":
+    reg1=reg_addr[file_read_words[1]]
+    reg2=reg_addr[file_read_words[2]]
+
+    if reg1<reg2:
+        vlge = "0100"
+    elif reg1>reg2:
+        vlge = "0010"
+    elif reg1==reg2:
+        vlge = "0001"
+    
+flag = flag_unused+vlge
+    
+
