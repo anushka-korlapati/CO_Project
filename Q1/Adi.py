@@ -4,7 +4,7 @@ reg_addr = {"R0":"000", "R1":"001", "R2":"010", "R3":"011", "R4":"100", "R5":"10
 
 
 def isa_reg_name_error(file_read_words):
-    if file_read_words[0] not in ['add','sub','mov','ld','st','mul','div','rs','ls','xor','or','and','not','cmp','jmp','jlt','jgt','je','hlt']:
+    if file_read_words[0] not in ['add','sub','mov','ld','st','mul','div','rs','ls','xor','or','and','not','cmp','jmp','jlt','jgt','je','hlt','var']:
         print("Error: Incorrect ISA")
     length = len(file_read_words)
     for i in range(1,length-1):
@@ -12,3 +12,6 @@ def isa_reg_name_error(file_read_words):
             print("Error: reg name not found")
             break
     return
+
+def lable_name_error(file_read_words):
+    

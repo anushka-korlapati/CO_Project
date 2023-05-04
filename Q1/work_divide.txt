@@ -4,13 +4,13 @@ type_c to be done by adi - done
 type_d to be done by harsh - done
 error handling to be done by harsh, adi and hemanth - //there are 9 error handling cases just put your name against which you will do and let me know
     a) Typos in instruction name or register name - Adi
-    b) Use of undefined variables - adi
+    b) Use of undefined variables 
     c) Use of undefined labels - adi
     d) Illegal use of FLAGS register
     e) Illegal Immediate values (more than 7 bits)
     f) Misuse of labels as variables or vice-versa
     g) Variables not declared at the beginning
     h) Missing hlt instruction
-    i) hlt not being used as the last instruction
+    i) hlt not being used as the last instruction - adi
 anushka has to do flag semantics
 then we start by writing code for handling the all the instructions and the main part of the code
