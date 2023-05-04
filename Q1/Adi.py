@@ -14,4 +14,13 @@ def isa_reg_name_error(file_read_words):
     return
 
 def lable_name_error(file_read_words):
+    if file_read_words[0][-1] == ':' and file_read_words[0][-2].isalnum():
+        pass
+    else:
+        print("Invaalid lable")
+        return
     
+def hlt_last(file_read_words):
+    if file_read_words[-1] != 'hlt':
+        print("hlt not found at last")
+    return

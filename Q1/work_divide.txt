@@ -11,6 +11,8 @@ error handling to be done by harsh, adi and hemanth - //there are 9 error handli
     f) Misuse of labels as variables or vice-versa
     g) Variables not declared at the beginning
     h) Missing hlt instruction
-    i) hlt not being used as the last instruction - adi
+    i) hlt not being used as the last instruction - adi // for this i think we might have to change our input format in which we are reading 
+    line by line instead we can take input like read the whole file and have nested list with each line in a form of line
+    eg: [["add","R1","R2","R3"],["mul","R2","R3","R4"],....] something like this i havent done it yet but if thought so pls lmk.
 anushka has to do flag semantics
 then we start by writing code for handling the all the instructions and the main part of the code
