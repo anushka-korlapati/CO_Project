@@ -9,7 +9,7 @@ def R_counter():
     return count
 count = R_counter()
 
-def Type_c(opcodes,reg_addr):
+def Type_c(opcodes):
     binary = opcodes + '00000'
     for i in file_read_words:
         temp_reg = ''
