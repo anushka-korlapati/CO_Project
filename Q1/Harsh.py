@@ -4,9 +4,17 @@ opcode = {"add": ["00000","A"],"sub":["00001","A"],"mov":["0001",""],"ld":["0010
           "not":["01101","C"],"cmp":["01110","C"],"jmp":["01111","E"],"jlt":["11100","E"],
           "jgt":["11101","E"],"je":["11111","E"],"hlt":["11110","F"]}
 
-def typeD(memaddr,opcode_val,read_list):
-    binary = opcode_val + "0"
-    for i in read_list:
-        if (i[0] == "R"):
-            binary += reg_addr[i]
-    return binary + memaddr
+def reg_check(register):
+    return bool(register in reg_addr and register != "FLAGS");
+
+def flag_check(register):
+    return bool(register == "FLAGS");
+
+def immediate_val_chk(imm):
+    if (imm[0] == "$" and imm[1:].isdigit()):
+        return (bool(int(imm[1:]) >= 0 and imm[1:] < 256))
+    else:
+        return False
+
+def var_check(var):
+    return (bool(var in var_dict))

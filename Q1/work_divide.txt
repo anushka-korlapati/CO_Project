@@ -6,8 +6,8 @@ error handling to be done by harsh, adi and hemanth - //there are 9 error handli
     a) Typos in instruction name or register name - Adi
     b) Use of undefined variables 
     c) Use of undefined labels - adi
-    d) Illegal use of FLAGS register
-    e) Illegal Immediate values (more than 7 bits)
+    d) Illegal use of FLAGS register - Harsh
+    e) Illegal Immediate values (more than 7 bits) - Harsh
     f) Misuse of labels as variables or vice-versa
     g) Variables not declared at the beginning
     h) Missing hlt instruction
