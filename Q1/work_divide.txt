@@ -6,11 +6,11 @@ error handling to be done by harsh, adi and hemanth - //there are 9 error handli
     a) Typos in instruction name or register name - Adi
     b) Use of undefined variables 
     c) Use of undefined labels - adi
-    d) Illegal use of FLAGS register
-    e) Illegal Immediate values (more than 7 bits)
-    f) Misuse of labels as variables or vice-versa
-    g) Variables not declared at the beginning
-    h) Missing hlt instruction
+    d) Illegal use of FLAGS register - Harsh
+    e) Illegal Immediate values (more than 7 bits) - Harsh
+    f) Misuse of labels as variables or vice-versa - hemanth
+    g) Variables not declared at the beginning - hemanth
+    h) Missing hlt instruction -hemanth
     i) hlt not being used as the last instruction - adi // for this i think we might have to change our input format in which we are reading 
     line by line instead we can take input like read the whole file and have nested list with each line in a form of line
     eg: [["add","R1","R2","R3"],["mul","R2","R3","R4"],....] something like this i havent done it yet but if thought so pls lmk.
