@@ -24,3 +24,5 @@ def hlt_last(file_read_words):
     if file_read_words[-1] != 'hlt':
         print("hlt not found at last")
     return
+
+print("Hi this is testing")
