@@ -27,15 +27,36 @@ opcode = {"add": ["00000","A"],"sub":["00001","A"],"mov":["0001",""],"ld":["0010
 		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"]}
 
 i=0
+
 def mem_allocation():
     for i in range(len(commands)):
         mem[i] = commands[i]
     print(mem)
 mem_allocation()
 
+def bin_convert(number,length):
+    number = bin(number)[2:]
+    number = number.rjust(length,'0')
+    return number
+
+def show_mem():
+    for line in mem:
+        stdout.write(line + '\n')
+
+def output():
+    stdout.write(bin_convert(PC,8))
+    for reg in Reg_File:
+        stdout.write(bin_convert(Reg_File[reg],16))
+    stdout.write('\n')
+
+def dec_int(str):
+    str=str[::-1]
+    result=sum([int(str[i])*(2**i)for i in range(len(str))])
+    return result
+
 def exec(line):
     
-    prev_flags=make_binary(Reg_File['111'],16)
+    prev_flags=bin_convert(Reg_File['111'],16)
 
     code=line[:5]
     type=opcode[code][1]
@@ -50,11 +71,11 @@ def exec(line):
     elif type == "E":
         line = E(line)
     
-    curr_flags = make_binary(Reg_File['111'],16)
+    curr_flags = bin_convert(Reg_File['111'],16)
     if (curr_flags == prev_flags):
         Reg_File['111']=0
 
-    line_output()
+    output()
 
 
 while mem[PC] != '1101000000000000':
@@ -64,3 +85,7 @@ while mem[PC] != '1101000000000000':
         j_PC = -1
     else:
         PC += 1
+
+Reg_File['111']=0
+output()
+show_mem()
