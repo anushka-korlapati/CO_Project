@@ -72,9 +72,6 @@ def and_(r1: str,r2: str,r3: str):
 def mov_i(reg: str,imm: str):
     Reg_File[reg] = imm
 
-def mov_r(r1: str,r2: str):
-    Reg_File[r2] = Reg_File[r1]
-
 def right(reg: str,imm: str):
     result = Reg_File[reg] >> imm
     if result > overflow:
@@ -85,6 +82,9 @@ def left(reg: str,imm: str) -> None:
     Reg_File[reg] = Reg_File[reg] << imm
 
 #Type C
+def mov_r(r1: str,r2: str):
+    Reg_File[r2] = Reg_File[r1]
+
 def move(line: str):
     Reg_File[line[13:16]] = Reg_File[line[10:13]]
 
