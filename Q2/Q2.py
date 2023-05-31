@@ -38,64 +38,64 @@ def dec_to_bin(string: int, lenght: int) -> str:
     return string
 
 #Type A
-def add(r1,r2,r3):
+def add(r1: str,r2: str,r3: str) -> None:
     result = Reg_File[r1] + Reg_File[r2]
     if result > overflow:
         Reg_File['111'] += 8
         result = result % (overflow + 1)
     Reg_File[r3] = result
 
-def sub(r1,r2,r3):
+def sub(r1: str,r2: str,r3: str):
     result = Reg_File[r1] - Reg_File[r2]
     if result < underflow:
         Reg_File['111'] += 8
         result = 0
     Reg_File[r3] = result
 
-def mul(r1,r2,r3):
+def mul(r1: str,r2: str,r3: str):
     result = Reg_File[r1] * Reg_File[r2]
     if result > overflow:
         Reg_File['111'] += 8
         result = result % (overflow + 1)
     Reg_File[r3] = result
 
-def xor(r1,r2,r3):
+def xor(r1: str,r2: str,r3: str):
     Reg_File[r3] = Reg_File[r1] ^ Reg_File[r2]
 
-def or_(r1,r2,r3):
+def or_(r1: str,r2: str,r3: str):
     Reg_File[r3] = Reg_File[r1] | Reg_File[r2]
 
-def and_(r1,r2,r3):
+def and_(r1: str,r2: str,r3: str):
     Reg_File[r3] = Reg_File[r1] & Reg_File[r2]
 
 #Type B
-def mov_i(reg,imm):
+def mov_i(reg: str,imm: str):
     Reg_File[reg] = imm
 
-def mov_r(r1,r2):
+def mov_r(r1: str,r2: str):
     Reg_File[r2] = Reg_File[r1]
 
-def right(reg,imm):
+def right(reg: str,imm: str):
     result = Reg_File[reg] >> imm
     if result > overflow:
         result = result % (overflow + 1)
     Reg_File[reg] = result
 
-def left(reg,imm):
+def left(reg: str,imm: str) -> None:
     Reg_File[reg] = Reg_File[reg] << imm
 
 #Type C
-def move(line):
+def move(line: str):
     Reg_File[line[13:16]] = Reg_File[line[10:13]]
 
-def div(line):
+def div(line: str):
     Reg_File['000'] = Reg_File[line[10:13]] / Reg_File[line[13:16]]
     Reg_File['001'] = Reg_File[line[10:13]] % Reg_File[line[13:16]]
 
-def bit_not(line):
+def bit_not(line: str):
     Reg_File[line[10:13]] = overflow + 1 + ~Reg_File[line[13:16]]
 
-def compare(line):
+def compare(line: str):
     ineq = Reg_File[line[10:13]] > Reg_File[line[13:16]]
     eq = Reg_File[line[10:13]] == Reg_File[line[13:16]]
     if (ineq):
