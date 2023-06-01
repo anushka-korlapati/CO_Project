@@ -1,19 +1,29 @@
-from sys import stdin,stdout,exit
+from sys import stdin,stdout
 
+#Program Counter
 PC = 0
 mem = ['0'*16] * 256
 
 overflow = 2**16 - 1
 underflow = 0
+jump = -1
 
-text = ["1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","1000000000001010","0101000000000000"]
+# text = ["0000000000001010","0000000000001010","0000000000001010","0000000000001010","0000000000001010","1101000000000000"]
+# text = ["0001000100001010",
+# "0001001001100100",
+# "0011000011001010",
+# "0010101100000101",
+# "1101000000000000",
+# ]
+# commands = []
+# text = stdin.readlines()
+# for i in range(len(text)):
+#     text[i] = text[i].strip()
+#     commands.append(text[i])
 
-commands = []
-
-for i in range(len(text)):
-    text[i] = text[i].strip()
-    commands.append(text[i])
-
+with open("bin/hard/test1") as inline:
+    txt = inline.readlines()
+    commands = [txt[i].strip() for i in range(len(txt))]
 commands = list(filter(lambda a: a != "",commands))
 
 Reg_File = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
@@ -24,10 +34,16 @@ def mem_store():
     # print(mem)
 mem_store()
 
+def line_output() -> None:
+    stdout.write(f"{dec_to_bin(PC,7)} ")
+    for register in Reg_File:
+        stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
+    stdout.write("\n")
+
 def bin_to_dec(string: str) -> int:
     result = 0
     j = 0
-    for i in range(len(string) - 1,0,-1):
+    for i in range(len(string) - 1, -1,-1):
         result += int(string[i]) * 2**j
         j += 1
     return result
@@ -70,7 +86,7 @@ def and_(r1: str,r2: str,r3: str):
 
 #Type B
 def mov_i(reg: str,imm: str):
-    Reg_File[reg] = imm
+    Reg_File[reg] = bin_to_dec(imm)
 
 def right(reg: str,imm: str):
     result = Reg_File[reg] >> imm
@@ -82,10 +98,7 @@ def left(reg: str,imm: str) -> None:
     Reg_File[reg] = Reg_File[reg] << imm
 
 #Type C
-def mov_r(r1: str,r2: str):
-    Reg_File[r2] = Reg_File[r1]
-
-def move(line: str):
+def mov_r(line: str):
     Reg_File[line[13:16]] = Reg_File[line[10:13]]
 
 def div(line: str):
@@ -106,11 +119,12 @@ def compare(line: str):
         Reg_File['111'] += 4
 
 #Type D
-def store(line: list[str]):
+def load(line: list[str]):
     Reg_File[line[5:9]] = bin_to_dec(line[9:16])
 
-def load(line: list[str]):
-    mem[bin_to_dec[line[9:16]]] = dec_to_bin(Reg_File[bin_to_dec(line[6:9])], 16)
+def store(line: list[str]):
+    # print(dec_to_bin(Reg_File[(bin_to_dec(line[6:9]))],16))
+    mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
 
 #Type E
 def unconditional_jump(line):
@@ -136,3 +150,42 @@ opcode = {"00000": [add,"A"],"00001":[sub,"A"],"00010":[mov_i,"B"],'00011':[mov_
 		  "01001":[left,"B"],"01010":[xor,"A"],"01011":[or_,"A"],"01100":[and_,"A"],
 		  "01101":[bit_not,"C"],"01110":[compare,"C"],"01111":[unconditional_jump,"E"],"11100":[smaller,"E"],
 		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"]}
+
+def execution(line):
+    flag = dec_to_bin(Reg_File["111"],16)
+
+    code = line[:5]
+    type = opcode[code][1]
+    if (type == "A"):
+        # print("1")
+        line = opcode[code][0](line[7:10], line[10:13], line[13:16])
+    elif (type == "B"):
+        # print("2")
+        line = opcode[code][0](line[6:9], line[9:16])
+    elif (type == "C"):
+        # print("3")
+        line = opcode[code][0](line)
+    elif (type == "D"):
+        # print("4")
+        line = opcode[code][0](line)
+    elif (type == "E"):
+        # print("5")
+        line = opcode[code][0](line)
+
+    post_flag = dec_to_bin(Reg_File["111"],16)
+
+    if (flag == post_flag):
+        Reg_File['111'] = 0
+    line_output()
+
+
+while mem[PC] != "1101000000000000":
+    execution(mem[PC])
+    # print(Reg_File["000"],Reg_File["001"],Reg_File["010"],Reg_File["011"],Reg_File["100"],Reg_File["101"],Reg_File["110"],Reg_File["111"])
+    if (jump==-1):
+        PC += 1
+    else:
+        PC=jump
+        jump=-1
+
+line_output()

@@ -1,14 +1,14 @@
-1.  Type B Instruction - Bitwise Shift Left (Opcode: 01010)
-    This instruction performs a bitwise left shift operation on the value in reg1 by an immediate value ($Imm).
+1.  Type C Instruction - Bitwise Shift Left (Opcode: 01010)
+    This instruction performs a bitwise left shift operation on the value in reg1 by reg2 value.
 
-    Opcode Unused reg1 Immediate Value
-    01010 0 XXX XXXXXXX
+    Opcode Unused reg1 reg2
+    01010 00000 XXX XXX
 
-2.  Type B Instruction - Bitwise Shift Right (Opcode: 01011)
-    This instruction performs a bitwise right shift operation on the value in reg1 by an immediate value ($Imm).
+2.  Type C Instruction - Bitwise Shift Right (Opcode: 01011)
+    This instruction performs a bitwise right shift operation on the value in reg1 by reg2 value.
 
-    Opcode Unused reg1 Immediate Value
-    01011 0 XXX XXXXXXX
+    Opcode Unused reg1 reg2
+    01011 00000 XXX XXX
 
 3.  Type C Instruction - Bitwise NOT (Opcode: 01100)
     This instruction performs a bitwise NOT operation on the value in reg2 and stores the result in reg1.
