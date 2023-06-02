@@ -40,14 +40,10 @@ def errors(code: str, line: str = "-1") -> None:
     if (line == "-1"):
         # print(error[code] + "\nAssembly Halted")
         stdout.write(error[code] + "\nAssembly Halted\n")
-        with open("output.txt","w") as outline:
-            outline.write(error[code] + "\nAssembly Halted")
         stdout.close()
         exit()
     # print("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted\n")
-    with open("output.txt","w") as outline:
-        outline.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.close()
     exit()
 
@@ -268,10 +264,8 @@ def main():
     # print(commands)
     var_dict,label_dict,op_dict = parsing(commands)
     main_process(var_dict, label_dict, op_dict)
-    with open("output.txt","w") as outline:
-        for i in range(len(L)):
-            stdout.write(L[i] + "\n")
-            outline.write(L[i] + "\n")
+    for i in range(len(L)):
+        stdout.write(L[i] + "\n")
     stdout.close()
 
 main()

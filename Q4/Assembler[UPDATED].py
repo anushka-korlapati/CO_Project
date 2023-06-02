@@ -19,9 +19,9 @@ opcode = {"add": ["00000","A"],"sub":["00001","A"],"mov":["0001",""],"ld":["0010
 		  "st":["00101","D"],"mul":["00110","A"],"div":["00111","C"],"rs":["01000","B"],
 		  "ls":["01001","B"],"xor":["01010","A"],"or":["01011","A"],"and":["01100","A"],
 		  "not":["01101","C"],"cmp":["01110","C"],"jmp":["01111","E"],"jlt":["11100","E"],
-		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"],"bit lft": ["10000","C"],
-          "bit rgt": ["10001", "C"], "bit not": ["10010", "C"], "cmp imm": ["10011", "D"],
-          "XOR imm": ["10100","E"]}
+		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"],"addf":["10000","A"],
+          "subf":["10001","A"],"movf":["10010","B"],"mod":["10011","A"],"rrgt":["10100","B"],
+          "rlft":["10101","B"],"addi":["10110","B"],"muli":["10111","B"]}
 
 #registery dictionary with format {register : regcode}
 reg_addr = {"R0":"000", "R1":"001", "R2":"010",
@@ -34,21 +34,17 @@ error = {"1" : "Multiple hlt statements", "2" : "last instruction is not hlt",
          "6" : "variable not defined at start", "7" : "label not found",
          "8" : "Duplicate variable", "9" : "Duplicate label", "10" : "Invalid Syntax",
          "11" : "No hlt instruction found", "12" : "Variable used as label", "13" : "Label used as variable",
-         "14" : "Immediate value not found", "15" : "Invalid operation"}
+         "14" : "Immediate value not found", "15" : "Invalid operation", "16": "Flaoting Point Number exceeds 8 bit"}
 
 #exits the program while showing the line at which error is caused
 def errors(code: str, line: str = "-1") -> None:
     if (line == "-1"):
         # print(error[code] + "\nAssembly Halted")
         stdout.write(error[code] + "\nAssembly Halted\n")
-        with open("output.txt","w") as outline:
-            outline.write(error[code] + "\nAssembly Halted")
         stdout.close()
         exit()
     # print("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted\n")
-    with open("output.txt","w") as outline:
-        outline.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.close()
     exit()
 
@@ -128,6 +124,39 @@ def Type_D(file_read_words: list[str], memaddr: str, var_dict: dict[str,str]) ->
 def Type_E(memaddr: str, label_dict: dict[str,str]) -> str:
     return "0000" + label_dict[memaddr[1]]
 
+def floating_to_bin(num: str, line: str) -> str:
+    str_ = num
+    find_point = str_.rfind('.')
+    lhs = int(str_[:find_point])
+    # print(lhs)
+    lhs_binary = bin(lhs)[2:]
+    # print(lhs_binary)
+    rhs = ("0"+(str_[find_point:]))
+
+    l=[]
+    i = 0
+    while rhs != '0.0':
+        # print(1)
+        x = float(rhs)*2
+        if x<1:
+            l.append("0")
+        else:
+            l.append("1")
+        rhs = "0." + str(x).split(".")[1]
+        if (i == 8):
+            break
+        i += 1
+    rhs_binary = ""
+    for j in l:
+        rhs_binary += (j)
+    final_bin = lhs_binary + rhs_binary
+    if (len(final_bin) > 8):
+        errors("16", line)
+    return final_bin.rjust(8,"0")
+
+def Type_Floating(file_read_words: list[str], imm: str, line: str) -> str:
+    return reg_addr[file_read_words[1]] + floating_to_bin(imm, line)
+
 def hlt() -> str:
     return "00000000000"
 
@@ -192,10 +221,12 @@ def main_process(var_dict: dict[str, str], label_dict: dict[str, str], op_dict: 
                     if flag_check(ln[1]):
                         errors("4", str(int(num) + 1))
                     errors("10", str(int(num) + 1))
+                elif ("." in ln[2][1:]):
+                    L.append(op + Type_Floating(ln, ln[2][1:], str(int(num) + 1)))
                 elif not immediate_val_chk(ln[2]):
                     errors("14", str(int(num) + 1))
                 else:
-                    L.append(op + Type_B(ln))
+                    L.append(op + Type_B(ln, ln[2][1:]))
             elif op_type == "C":
                 if len(ln) != 3:
                     # print(2)
@@ -234,10 +265,8 @@ def main():
     # print(commands)
     var_dict,label_dict,op_dict = parsing(commands)
     main_process(var_dict, label_dict, op_dict)
-    with open("output.txt","w") as outline:
-        for i in range(len(L)):
-            stdout.write(L[i] + "\n")
-            outline.write(L[i] + "\n")
+    for i in range(len(L)):
+        stdout.write(L[i] + "\n")
     stdout.close()
 
 main()

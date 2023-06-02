@@ -195,6 +195,6 @@ while mem[PC] != "1101000000000000":
     else:
         PC=bin_to_dec(jump)
         jump=-1
-    print(Reg_File['011'])
+    # print(Reg_File['011'])
 
 line_output()
