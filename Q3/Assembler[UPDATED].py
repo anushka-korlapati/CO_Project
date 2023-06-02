@@ -19,7 +19,8 @@ opcode = {"add": ["00000","A"],"sub":["00001","A"],"mov":["0001",""],"ld":["0010
 		  "st":["00101","D"],"mul":["00110","A"],"div":["00111","C"],"rs":["01000","B"],
 		  "ls":["01001","B"],"xor":["01010","A"],"or":["01011","A"],"and":["01100","A"],
 		  "not":["01101","C"],"cmp":["01110","C"],"jmp":["01111","E"],"jlt":["11100","E"],
-		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"]}
+		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"],"addf":["10000","A"],
+          "subf":["10001","A"],"movf":["10010","B"]}
 
 #registery dictionary with format {register : regcode}
 reg_addr = {"R0":"000", "R1":"001", "R2":"010",
@@ -126,8 +127,38 @@ def Type_D(file_read_words: list[str], memaddr: str, var_dict: dict[str,str]) ->
 def Type_E(memaddr: str, label_dict: dict[str,str]) -> str:
     return "0000" + label_dict[memaddr[1]]
 
-def Type_Floating(file_read_words: list[str], imm: str) -> str:
-    return reg_addr[file_read_words[1]] + bin(int(imm))
+def floating_to_bin(num: str, line: str) -> str:
+    str_ = num
+    find_point = str_.rfind('.')
+    lhs = int(str_[:find_point])
+    # print(lhs)
+    lhs_binary = bin(lhs)[2:]
+    # print(lhs_binary)
+    rhs = ("0"+(str_[find_point:]))
+
+    l=[]
+    i = 0
+    while rhs != '0.0':
+        # print(1)
+        x = float(rhs)*2
+        if x<1:
+            l.append("0")
+        else:
+            l.append("1")
+        rhs = "0." + str(x).split(".")[1]
+        if (i == 8):
+            break
+        i += 1
+    rhs_binary = ""
+    for j in l:
+        rhs_binary += (j)
+    final_bin = lhs_binary + rhs_binary
+    if (len(final_bin) > 8):
+        errors("16", line)
+    return final_bin.rjust(8,"0")
+
+def Type_Floating(file_read_words: list[str], imm: str, line: str) -> str:
+    return reg_addr[file_read_words[1]] + floating_to_bin(imm, line)
 
 def hlt() -> str:
     return "00000000000"
@@ -193,10 +224,12 @@ def main_process(var_dict: dict[str, str], label_dict: dict[str, str], op_dict: 
                     if flag_check(ln[1]):
                         errors("4", str(int(num) + 1))
                     errors("10", str(int(num) + 1))
+                elif ("." in ln[2][1:]):
+                    L.append(op + Type_Floating(ln, ln[2][1:], str(int(num) + 1)))
                 elif not immediate_val_chk(ln[2]):
                     errors("14", str(int(num) + 1))
                 else:
-                    L.append(op + Type_B(ln))
+                    L.append(op + Type_B(ln, ln[2]))
             elif op_type == "C":
                 if len(ln) != 3:
                     # print(2)
