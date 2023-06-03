@@ -148,10 +148,14 @@ def floating_to_bin(num: str, line: str) -> str:
     rhs_binary = ""
     for j in l:
         rhs_binary += (j)
+    if (len(rhs_binary) != 5):
+        while (len(rhs_binary) != 5):
+            rhs_binary += "0"
+    lhs_binary.rjust(3,"0")
     final_bin = lhs_binary + rhs_binary
     if (len(final_bin) > 8):
         errors("16", line)
-    return final_bin.rjust(8,"0")
+    return final_bin
 
 def Type_Floating(file_read_words: list[str], imm: str, line: str) -> str:
     return reg_addr[file_read_words[1]] + floating_to_bin(imm, line)

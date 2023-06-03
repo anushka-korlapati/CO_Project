@@ -21,6 +21,10 @@ def floating_to_bin(num: float) -> str:
     rhs_binary = ""
     for j in l:
         rhs_binary += (j)
+    if (len(rhs_binary) != 5):
+        while (len(rhs_binary) != 5):
+            rhs_binary += "0"
+    lhs_binary.rjust(3,"0")
     return lhs_binary + "." + rhs_binary
 
 def bin_to_floating(num: str) -> int:
