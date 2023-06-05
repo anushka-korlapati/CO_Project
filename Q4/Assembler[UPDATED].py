@@ -34,7 +34,8 @@ error = {"1" : "Multiple hlt statements", "2" : "last instruction is not hlt",
          "6" : "variable not defined at start", "7" : "label not found",
          "8" : "Duplicate variable", "9" : "Duplicate label", "10" : "Invalid Syntax",
          "11" : "No hlt instruction found", "12" : "Variable used as label", "13" : "Label used as variable",
-         "14" : "Immediate value not found", "15" : "Invalid operation", "16": "Flaoting Point Number exceeds 8 bit"}
+         "14" : "Immediate value not found", "15" : "Invalid operation", "16": "Flaoting Point Number exceeds 8 bit",
+         "17" : "Too many instructions provided"}
 
 #exits the program while showing the line at which error is caused
 def errors(code: str, line: str = "-1") -> None:
@@ -269,6 +270,8 @@ def main():
     # print(commands)
     var_dict,label_dict,op_dict = parsing(commands)
     main_process(var_dict, label_dict, op_dict)
+    if (len(L) > 128):
+        errors("17")
     for i in range(len(L)):
         stdout.write(L[i] + "\n")
     stdout.close()

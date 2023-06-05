@@ -3,7 +3,7 @@ from sys import stdin,stdout
 #Program Counter
 PC = 0
 #Here it is defining a list(array) where the max number of 
-mem = ['0'*16] * 256
+mem = ['0'*16] * 128
 
 #Setting an overflow limit (Basically applying the formula)
 overflow = 2**16 - 1
@@ -27,6 +27,8 @@ for i in range(len(text)):
 
 #The final value in integer will be stored which will then convert to binary and be printed
 Reg_File = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
+
+Var_dict = dict()
 
 #Just copying the inputs to the list defined above
 for i in range(len(commands)):
@@ -160,11 +162,13 @@ def compare(line: str) -> None:
 
 #Type D
 def load(line: str) -> None:
-    Reg_File[line[6:9]] = bin_to_dec(line[9:16])
+    if (line[9:16] in Var_dict):
+        Reg_File[line[6:9]] = bin_to_dec(line[9:16])
 
 def store(line: str) -> None:
     # print(dec_to_bin(Reg_File[(bin_to_dec(line[6:9]))],16))
     mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
+    Var_dict[line[9:16]] = dec_to_bin(Reg_File[line[6:9]], 16)
 
 #Type E
 def unconditional_jump(line) -> None:
@@ -174,17 +178,15 @@ def unconditional_jump(line) -> None:
     jump = line[9:16]
 
 def equal(line) -> None:
-    if (Reg_File['111'] % 2 == 1):
+    if (Reg_File['111'] == 1):
         unconditional_jump(line)
 
 def greater(line) -> None:
-    if ((Reg_File['111'] >> 2) % 2 == 1):
-        # print(1)
-        # exit()
+    if ((Reg_File['111']) == 2):
         unconditional_jump(line)
 
 def smaller(line) -> None:
-    if ((Reg_File['111'] >> 1) % 2 == 1):
+    if (Reg_File['111'] == 4):
         unconditional_jump(line)
 
 #this is new opcode that we creating and we have added the functions next to the respective opcode
@@ -209,7 +211,8 @@ def execution(line: str) -> None:
         # print("2")
         if (code == "10010"):
             line = opcode[code][0](line[5:8], line[8:16])
-        line = opcode[code][0](line[6:9], line[9:16])
+        else:
+            line = opcode[code][0](line[6:9], line[9:16])
     elif (type == "C"):
         # print("3")
         line = opcode[code][0](line)
