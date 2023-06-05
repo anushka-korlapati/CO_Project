@@ -3,7 +3,7 @@ from sys import stdin,stdout
 #Program Counter
 PC = 0
 #Here it is defining a list(array) where the max number of 
-mem = ['0'*16] * 256
+mem = ['0'*16] * 128
 
 #Setting an overflow limit (Basically applying the formula)
 overflow = 2**16 - 1
@@ -28,6 +28,8 @@ for i in range(len(text)):
 #The final value in integer will be stored which will then convert to binary and be printed
 Reg_File = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
 
+Var_dict = dict()
+
 #Just copying the inputs to the list defined above
 for i in range(len(commands)):
     mem[i] = commands[i]
@@ -35,7 +37,7 @@ for i in range(len(commands)):
 
 #it defines itself that is it prints outputs of every line
 def line_output() -> None:
-    stdout.write(f"{dec_to_bin(PC,7)} ")
+    stdout.write(f"{dec_to_bin(PC,7)}        ")
     for register in Reg_File:
         # print(Reg_File[register])
         stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
@@ -113,9 +115,9 @@ def bit_not(line: str) -> None:
     Reg_File[line[10:13]] = overflow + 1 + ~Reg_File[line[13:16]]
 
 def compare(line: str) -> None:
-    ineq = Reg_File[line[10:13]] > Reg_File[line[13:16]]
+    grt = Reg_File[line[10:13]] > Reg_File[line[13:16]]
     eq = Reg_File[line[10:13]] == Reg_File[line[13:16]]
-    if (ineq):
+    if grt:
         Reg_File['111'] += 2
     elif (eq):
         Reg_File['111'] += 1
@@ -124,11 +126,13 @@ def compare(line: str) -> None:
 
 #Type D
 def load(line: str) -> None:
-    Reg_File[line[6:9]] = bin_to_dec(line[9:16])
+    if (line[9:16] in Var_dict):
+        Reg_File[line[6:9]] = bin_to_dec(line[9:16])
 
 def store(line: str) -> None:
     # print(dec_to_bin(Reg_File[(bin_to_dec(line[6:9]))],16))
     mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
+    Var_dict[line[9:16]] = dec_to_bin(Reg_File[line[6:9]], 16)
 
 #Type E
 def unconditional_jump(line) -> None:
@@ -138,17 +142,15 @@ def unconditional_jump(line) -> None:
     jump = line[9:16]
 
 def equal(line) -> None:
-    if (Reg_File['111'] % 2 == 1):
+    if (Reg_File['111'] == 1):
         unconditional_jump(line)
 
 def greater(line) -> None:
-    if ((Reg_File['111'] >> 2) % 2 == 1):
-        # print(1)
-        # exit()
+    if ((Reg_File['111']) == 2):
         unconditional_jump(line)
 
 def smaller(line) -> None:
-    if ((Reg_File['111'] >> 1) % 2 == 1):
+    if (Reg_File['111'] == 4):
         unconditional_jump(line)
 
 #this is new opcode that we creating and we have added the functions next to the respective opcode
@@ -197,4 +199,7 @@ while mem[PC] != "1101000000000000":
         jump=-1
     # print(Reg_File['011'])
 
+
 line_output()
+for i in range(len(mem)):
+    stdout.write(mem[i] + "\n")

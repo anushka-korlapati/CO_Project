@@ -1,222 +1,205 @@
-from sys import exit, stdin, stdout
+from sys import stdin,stdout
 
-#Initializing all needed hardware equivalents
-MEM = ['0'*16] * 256
+#Program Counter
+PC = 0
+#Here it is defining a list(array) where the max number of 
+mem = ['0'*16] * 128
 
-PC=0
-j_PC=-1
+#Setting an overflow limit (Basically applying the formula)
+overflow = 2**16 - 1
+#Underflow limit being set to 0
+underflow = 0
+#Jump variabl, this comes in action when we have jump operations
+jump = -1
 
-RF = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
+#This block of code is for terminal inputs
+commands = []
+text = stdin.readlines()
+for i in range(len(text)):
+    text[i] = text[i].strip()
+    commands.append(text[i])
 
-overflow_lim = 2**16 -1
-underflow_lim = 0
+#This block of code is for file inputs
+# with open("bin/hard/test1") as inline:
+#     txt = inline.readlines()
+#     commands = [txt[i].strip() for i in range(len(txt))]
+# commands = list(filter(lambda a: a != "",commands))
 
+#The final value in integer will be stored which will then convert to binary and be printed
+Reg_File = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
 
-data = stdin.readlines()
-data = [line.strip() for line in data]
-data = list(filter(lambda a: a != "", data))
+Var_dict = dict()
 
-def fix_mem():
-    for i in range(len(data)):
-        MEM[i] = data[i]
+#Just copying the inputs to the list defined above
+for i in range(len(commands)):
+    mem[i] = commands[i]
+# print(mem)
 
-fix_mem()
-
-def make_binary(number, length):
-    number = bin(number)[2:]
-    number = number.rjust(length, "0")
-    return number
-
-def mem_dump():
-    for line in MEM:
-        stdout.write(line + "\n")
-
-def line_output():
-    stdout.write(f"{make_binary(PC,8)} ")
-    for register in RF:
-        stdout.write(f"{make_binary(RF[register],16)} ")
+#it defines itself that is it prints outputs of every line
+def line_output() -> None:
+    stdout.write(f"{dec_to_bin(PC,7)}        ")
+    for register in Reg_File:
+        # print(Reg_File[register])
+        stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
     stdout.write("\n")
 
-
-# refactor for stdio, test this thing...
-# reset FLAGS overflow and underflow bits whenever needed
-
-def dec_int(string):
-    string=string[::-1]
-    result=sum([int(string[i])*(2**i)
-                for i in range(len(string))])
+#converts binary to decimal
+def bin_to_dec(string: str) -> int:
+    result = 0
+    j = 0
+    for i in range(len(string) - 1, -1,-1):
+        result += int(string[i]) * 2**j
+        j += 1
     return result
 
-#Classes for each type
-class A:
-    def __init__(self, line):
-        self.oper = opcode[line[:5]][0]
-        self.reg1 = line[7:10]
-        self.reg2 = line[10:13]
-        self.reg3 = line[13:16]
-        self.oper(self)
-    
-    def add(self):
-        ans = RF[self.reg1] + RF[self.reg2]
-        if ans > overflow_lim:
-            RF['111'] += 8
-            ans = ans % (overflow_lim + 1)
-        RF[self.reg3] = ans
-    
-    def subtract(self):
-        ans = RF[self.reg1] - RF[self.reg2]
-        if ans < underflow_lim:
-            RF['111'] += 8
-            ans = 0
-        RF[self.reg3] = ans
-    
-    def multiply(self):
-        ans = RF[self.reg1] * RF[self.reg2]
-        if ans > overflow_lim:
-            RF['111'] += 8
-            ans = ans % (overflow_lim + 1)
-        RF[self.reg3] = ans
-    
-    def bool_xor(self):
-        RF[self.reg3] = RF[self.reg1] ^ RF[self.reg2]
-    
-    def bool_or(self):
-        RF[self.reg3] = RF[self.reg1] | RF[self.reg2]
-    
-    def bool_and(self):
-        RF[self.reg3] = RF[self.reg1] & RF[self.reg2]
+#converts decimal to binary
+def dec_to_bin(string: int, lenght: int = 16) -> str:
+    string = bin(string)[2:]
+    string = string.rjust(lenght, "0")
+    return string
 
-class B:
-    def __init__(self, line):
-        self.oper = opcode[line[:5]][0]
-        self.reg = line[5:8]
-        self.imm = dec_int(line[8:16])
-        self.oper(self)
-    
-    def mov_i(self):
-        RF[self.reg] = self.imm
-    
-    def right(self):
-        ans = RF[self.reg] >> self.imm
-        if ans > overflow_lim:
-            ans = ans % (overflow_lim + 1)
-        RF[self.reg] = ans
-        
-    
-    def left(self):
-        RF[self.reg] = RF[self.reg] << self.imm
+#Type A
+def add(r1: str,r2: str,r3: str) -> None:
+    # print(r1,r2,r3)
+    result = Reg_File[r3] + Reg_File[r2]
+    if result > overflow:
+        Reg_File['111'] += 8
+        result = result % (overflow + 1)
+    Reg_File[r1] = result
 
-class C:
-    def __init__(self, line):
-        self.oper = opcode[line[:5]][0]
-        self.reg1 = line[10:13]
-        self.reg2 = line[13:16]
-        self.oper(self)
-    
-    def mov_r(self):
-        RF[self.reg2] = RF[self.reg1]
-    
-    def divide(self):
-        RF['000'] = RF[self.reg1] // RF[self.reg2]
-        RF['001'] = RF[self.reg1] % RF[self.reg2]
-        
-    
-    def invert(self):
-        RF[self.reg2] = overflow_lim + 1 + ~RF[self.reg1]
-    
-    def compare(self):
-        ineq = RF[self.reg1] > RF[self.reg2]
-        eq = RF[self.reg1] == RF[self.reg2]
-        if ineq:
-            RF['111'] += 2
-        elif eq:
-            RF['111'] += 1
-        else:
-            RF['111'] += 4
+def sub(r1: str,r2: str,r3: str) -> None:
+    result = Reg_File[r2] - Reg_File[r3]
+    if result < underflow:
+        Reg_File['111'] += 8
+        result = 0
+    Reg_File[r1] = result
 
-class D:
-    def __init__(self, line):
-        self.oper = opcode[line[:5]][0]
-        self.reg = line[5:8]
-        self.mem = dec_int(line[8:16])
-        self.oper(self)
-    
-    def load(self):
-        RF[self.reg] = dec_int(MEM[self.mem])
-    
-    def store(self):
-        MEM[self.mem] = make_binary(RF[self.reg],16)
+def mul(r1: str,r2: str,r3: str) -> None:
+    result = Reg_File[r1] * Reg_File[r2]
+    if result > overflow:
+        Reg_File['111'] += 8
+        result = result % (overflow + 1)
+    Reg_File[r3] = result
 
-class E:
-    def __init__(self, line):
-        self.oper = opcode[line[:5]][0]
-        self.mem = dec_int(line[8:16])
-        self.oper(self)
-    
-    def unconditional(self):
-        global PC
-        global j_PC
+def xor(r1: str,r2: str,r3: str) -> None:
+    Reg_File[r3] = Reg_File[r1] ^ Reg_File[r2]
 
-        j_PC = self.mem
-    
-    def less(self):
-        if (RF['111'] >> 2) % 2 == 1:
-            E.unconditional(self)
-    
-    def greater(self):
-        if (RF['111'] >> 1) % 2 == 1:
-            E.unconditional(self)
-    
-    def equal(self):
-        if RF['111'] % 2 == 1:
-            E.unconditional(self)
+def or_(r1: str,r2: str,r3: str) -> None:
+    Reg_File[r3] = Reg_File[r1] | Reg_File[r2]
 
-#Opcode mapping        
-opcode = {"10000": [A.add, "A"], "10001": [A.subtract, "A"], "10010": [B.mov_i, "B"], "10011": [C.mov_r, "C"], "10100": [D.load, "D"],
-          "10101": [D.store, "D"], "10110": [A.multiply, "A"], "10111": [C.divide, "C"], "11000": [B.right, "B"], "11001": [B.left, "B"],
-          "11010": [A.bool_xor, "A"], "11011": [A.bool_or, "A"], "11100": [A.bool_and, "A"],
-          "11101": [C.invert, "C"], "11110": [C.compare, "C"], "11111": [E.unconditional, "E"],
-          "01100": [E.less, "E"], "01101": [E.greater, "E"], "01111": [E.equal, "E"], "01010": ["hlt", "F"]}
+def and_(r1: str,r2: str,r3: str) -> None:
+    Reg_File[r3] = Reg_File[r1] & Reg_File[r2]
 
-#Initialising lines as instructions of their respective types
-def exec(line):
-    
-    prev_flags=make_binary(RF['111'],16)
+#Type B
+def mov_i(reg: str,imm: str) -> None:
+    Reg_File[reg] = bin_to_dec(imm)
 
-    code=line[:5]
-    type=opcode[code][1]
-    if type == "A":
-        line = A(line)
-    elif type == "B":
-        line = B(line)
-    elif type == "C":
-        line = C(line)
-    elif type == "D":
-        line = D(line)
-    elif type == "E":
-        line = E(line)
-    
-    curr_flags = make_binary(RF['111'],16)
-    if (curr_flags == prev_flags):
-        RF['111']=0
+def right(reg: str,imm: str) -> None:
+    result = Reg_File[reg] >> imm
+    if result > overflow:
+        result = result % (overflow + 1)
+    Reg_File[reg] = result
 
+def left(reg: str,imm: str) -> None:
+    Reg_File[reg] = Reg_File[reg] << imm
+
+#Type C
+def mov_r(line: str) -> None:
+    Reg_File[line[10:13]] = Reg_File[line[13:16]]
+
+def div(line: str) -> None:
+    Reg_File['000'] = Reg_File[line[10:13]] / Reg_File[line[13:16]]
+    Reg_File['001'] = Reg_File[line[10:13]] % Reg_File[line[13:16]]
+
+def bit_not(line: str) -> None:
+    Reg_File[line[10:13]] = overflow + 1 + ~Reg_File[line[13:16]]
+
+def compare(line: str) -> None:
+    grt = Reg_File[line[10:13]] > Reg_File[line[13:16]]
+    eq = Reg_File[line[10:13]] == Reg_File[line[13:16]]
+    if grt:
+        Reg_File['111'] += 2
+    elif (eq):
+        Reg_File['111'] += 1
+    else:
+        Reg_File['111'] += 4
+
+#Type D
+def load(line: str) -> None:
+    if (line[9:16] in Var_dict):
+        Reg_File[line[6:9]] = bin_to_dec(line[9:16])
+
+def store(line: str) -> None:
+    # print(dec_to_bin(Reg_File[(bin_to_dec(line[6:9]))],16))
+    mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
+    Var_dict[line[9:16]] = dec_to_bin(Reg_File[line[6:9]], 16)
+
+#Type E
+def unconditional_jump(line) -> None:
+    global PC
+    global jump
+
+    jump = line[9:16]
+
+def equal(line) -> None:
+    if (Reg_File['111'] == 1):
+        unconditional_jump(line)
+
+def greater(line) -> None:
+    if ((Reg_File['111']) == 2):
+        unconditional_jump(line)
+
+def smaller(line) -> None:
+    if (Reg_File['111'] == 4):
+        unconditional_jump(line)
+
+#this is new opcode that we creating and we have added the functions next to the respective opcode
+opcode = {"00000": [add,"A"],"00001":[sub,"A"],"00010":[mov_i,"B"],'00011':[mov_r,'C'],"00100":[load,"D"],
+          "00101":[store,"D"],"00110":[mul,"A"],"00111":[div,"C"],"01000":[right,"B"],
+		  "01001":[left,"B"],"01010":[xor,"A"],"01011":[or_,"A"],"01100":[and_,"A"],
+		  "01101":[bit_not,"C"],"01110":[compare,"C"],"01111":[unconditional_jump,"E"],"11100":[smaller,"E"],
+		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"]}
+
+#here execution is done after splitting the line
+def execution(line: str) -> None:
+    pre_flag = dec_to_bin(Reg_File["111"],16)
+
+    code = line[:5]
+    type = opcode[code][1]
+    if (type == "A"):
+        # print("1")
+        line = opcode[code][0](line[7:10], line[10:13], line[13:16])
+    elif (type == "B"):
+        # print("2")
+        line = opcode[code][0](line[6:9], line[9:16])
+    elif (type == "C"):
+        # print("3")
+        line = opcode[code][0](line)
+    elif (type == "D"):
+        # print("4")
+        line = opcode[code][0](line)
+    elif (type == "E"):
+        # print("5")
+        line = opcode[code][0](line)
+
+    post_flag = dec_to_bin(Reg_File["111"],16)
+
+    if (pre_flag == post_flag):
+        Reg_File['111'] = 0
     line_output()
-    # else:
-    #     output_testing()
-    #     PC += 1
-    #     exit()
 
 
-
-while MEM[PC] != "0101000000000000":
-    exec(MEM[PC])
-    if (j_PC==-1):
+while mem[PC] != "1101000000000000":
+    execution(mem[PC])
+    # print(Reg_File["000"],Reg_File["001"],Reg_File["010"],Reg_File["011"],Reg_File["100"],Reg_File["101"],Reg_File["110"],Reg_File["111"])
+    if (jump==-1):
         PC += 1
     else:
-        PC=j_PC
-        j_PC=-1
+        PC=bin_to_dec(jump)
+        jump=-1
+    # print(Reg_File['011'])
 
-#output()
-RF['111']=0
+
 line_output()
-mem_dump()
+for i in range(len(mem)):
+    stdout.write(mem[i] + "\n")
