@@ -139,15 +139,25 @@ def floating_to_bin(num: float, line: str) -> str:
     # Convert the number to binary
     binary = ''
     exponent = 0
-    while num >= 2.0:
-        num /= 2
-        exponent += 1
+
+    if num < 1.0:
+        while num < 1.0:
+            num *= 2
+            exponent -= 1
+    else:
+        while num >= 2.0:
+            num /= 2
+            exponent += 1
+
     # Calculate the bias for the exponent
     bias = 2**(3 - 1) - 1
+
     # Calculate the biased exponent value
     biased_exponent = exponent + bias
+
     # Convert the exponent to binary
     exponent_bits = bin(biased_exponent)[2:].zfill(3)
+
     # Convert the mantissa to binary
     mantissa_bits = ''
     fraction = num - 1.0  # Remove the implicit leading 1
@@ -156,7 +166,8 @@ def floating_to_bin(num: float, line: str) -> str:
         bit = int(fraction)
         mantissa_bits += str(bit)
         fraction -= bit
-    # Combine the sign, exponent, and man tissa to get the final binary representation
+
+    # Combine the sign, exponent, and mantissa to get the final binary representation
     binary = exponent_bits + mantissa_bits
     if (len(binary) > 8):
         errors("16", line)

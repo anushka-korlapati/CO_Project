@@ -35,9 +35,9 @@ def binary_to_float(binary):
 
 
 # Example usage
-binary_representation = '11111110'
-float_number = binary_to_float(binary_representation)
-print(type(float_number))
+# binary_representation = '01111000'
+# float_number = binary_to_float(binary_representation)
+# print(float_number)
 
 
 def float_to_binary(num):
@@ -59,9 +59,14 @@ def float_to_binary(num):
     binary = ''
     exponent = 0
 
-    while num >= 2.0:
-        num /= 2
-        exponent += 1
+    if num < 1.0:
+        while num < 1.0:
+            num *= 2
+            exponent -= 1
+    else:
+        while num >= 2.0:
+            num /= 2
+            exponent += 1
 
     # Calculate the bias for the exponent
     bias = 2**(3 - 1) - 1
@@ -81,14 +86,15 @@ def float_to_binary(num):
         mantissa_bits += str(bit)
         fraction -= bit
 
-    # Combine the sign, exponent, and man tissa to get the final binary representation
+    # Combine the sign, exponent, and mantissa to get the final binary representation
     binary = exponent_bits + mantissa_bits
 
     return binary
 
 
+
 # Example usage
-# num = 8.0
-# binary_representation = float_to_binary(num)
-# print(binary_representation)
+num = 0.75
+binary_representation = float_to_binary(num)
+print(binary_representation)
 
