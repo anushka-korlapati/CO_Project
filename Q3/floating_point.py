@@ -94,7 +94,7 @@ def float_to_binary(num):
 
 
 # Example usage
-num = 0.75
+num = 1.5
 binary_representation = float_to_binary(num)
 print(binary_representation)
 
