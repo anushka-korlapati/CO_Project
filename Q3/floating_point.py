@@ -1,45 +1,94 @@
-def floating_to_bin(num: float) -> str:
-    str_ = str(num)
+def binary_to_float(binary):
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if binary == '00000000':
+        return 0.0
+    elif binary == '01111000':
+        return float('inf')
+    elif binary == '11111000':
+        return float('-inf')
+    elif binary == '11111001':
+        return float('nan')
 
-    find_point = str_.rfind('.')
-    lhs = int(str_[:find_point])
-    print(lhs)
-    lhs_binary = bin(lhs)[2:]
-    print(lhs_binary)
-    rhs = ("0"+(str_[find_point:]))
+    # Extract the sign, exponent, and mantissa bits
+    exponent_bits = binary[0:3]
+    mantissa_bits = binary[3:]
 
-    l=[]
-    while rhs != '0.0':
-        # print(1)
-        x = float(rhs)*2
-        if x<1:
-            l.append("0")
-        else:
-            l.append("1")
-        rhs = "0." + str(x).split(".")[1]
-        print(rhs)
-    rhs_binary = ""
-    for j in l:
-        rhs_binary += (j)
-    if (len(rhs_binary) != 5):
-        while (len(rhs_binary) != 5):
-            rhs_binary += "0"
-    lhs_binary.rjust(3,"0")
-    return lhs_binary + "." + rhs_binary
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
 
-def bin_to_floating(num: str) -> int:
-    lhs, rhs = num.split(".")
-    lhs_int = 0
-    rhs_int = 0
-    j = len(lhs) - 1
-    for i in range(len(lhs)):
-        lhs_int += int(lhs[j]) * 2**i
-        j -= 1
-    for i in range(1,len(rhs) + 1):
-        rhs_int += int(rhs[i - 1]) * 2**(-i)
-    
-    floating_number = lhs_int + rhs_int
-    return floating_number
+    # Convert the exponent from binary to decimal
+    exponent = int(exponent_bits, 2) - bias
+
+    # Calculate the implicit leading 1 for the mantissa
+    implicit_leading = 1.0
+
+    # Convert the mantissa from binary to decimal
+    mantissa = 0.0
+    for i in range(len(mantissa_bits)):
+        bit = int(mantissa_bits[i])
+        mantissa += bit * (2**(-i - 1))
+
+    # Combine the sign, exponent, and mantissa to get the final floating-point number
+    result = implicit_leading * (1 + mantissa) * (2 ** exponent)
+
+    return result
 
 
-print(floating_to_bin(58.293))
+# Example usage
+binary_representation = '11111110'
+float_number = binary_to_float(binary_representation)
+print(type(float_number))
+
+
+def float_to_binary(num):
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if num == 0:
+        return '00000000'
+    elif num == float('inf'):
+        return '01111000'
+    elif num == float('-inf'):
+        return '11111000'
+    elif num != num:  # NaN check
+        return '11111001'
+
+    # Check the sign of the number
+    sign = '1' if num < 0 else '0'
+    num = abs(num)
+
+    # Convert the number to binary
+    binary = ''
+    exponent = 0
+
+    while num >= 2.0:
+        num /= 2
+        exponent += 1
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Calculate the biased exponent value
+    biased_exponent = exponent + bias
+
+    # Convert the exponent to binary
+    exponent_bits = bin(biased_exponent)[2:].zfill(3)
+
+    # Convert the mantissa to binary
+    mantissa_bits = ''
+    fraction = num - 1.0  # Remove the implicit leading 1
+    for i in range(5):
+        fraction *= 2
+        bit = int(fraction)
+        mantissa_bits += str(bit)
+        fraction -= bit
+
+    # Combine the sign, exponent, and man tissa to get the final binary representation
+    binary = exponent_bits + mantissa_bits
+
+    return binary
+
+
+# Example usage
+# num = 8.0
+# binary_representation = float_to_binary(num)
+# print(binary_representation)
+

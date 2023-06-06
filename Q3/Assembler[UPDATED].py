@@ -123,39 +123,44 @@ def Type_D(file_read_words: list[str], memaddr: str, var_dict: dict[str,str]) ->
 def Type_E(memaddr: str, label_dict: dict[str,str]) -> str:
     return "0000" + label_dict[memaddr[1]]
 
-def floating_to_bin(num: str, line: str) -> str:
-    str_ = num
-    find_point = str_.rfind('.')
-    lhs = int(str_[:find_point])
-    # print(lhs)
-    lhs_binary = bin(lhs)[2:]
-    # print(lhs_binary)
-    rhs = ("0"+(str_[find_point:]))
+def floating_to_bin(num: float, line: str) -> str:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if num == 0:
+        return '00000000'
+    elif num == float('inf'):
+        return '01111000'
+    elif num == float('-inf'):
+        return '11111000'
+    elif num != num:  # NaN check
+        return '11111001'
 
-    l=[]
-    i = 0
-    while rhs != '0.0':
-        # print(1)
-        x = float(rhs)*2
-        if x<1:
-            l.append("0")
-        else:
-            l.append("1")
-        rhs = "0." + str(x).split(".")[1]
-        if (i == 8):
-            break
-        i += 1
-    rhs_binary = ""
-    for j in l:
-        rhs_binary += (j)
-    if (len(rhs_binary) != 5):
-        while (len(rhs_binary) != 5):
-            rhs_binary += "0"
-    lhs_binary.rjust(3,"0")
-    final_bin = lhs_binary + rhs_binary
-    if (len(final_bin) > 8):
+    num = abs(num)
+
+    # Convert the number to binary
+    binary = ''
+    exponent = 0
+    while num >= 2.0:
+        num /= 2
+        exponent += 1
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+    # Calculate the biased exponent value
+    biased_exponent = exponent + bias
+    # Convert the exponent to binary
+    exponent_bits = bin(biased_exponent)[2:].zfill(3)
+    # Convert the mantissa to binary
+    mantissa_bits = ''
+    fraction = num - 1.0  # Remove the implicit leading 1
+    for i in range(5):
+        fraction *= 2
+        bit = int(fraction)
+        mantissa_bits += str(bit)
+        fraction -= bit
+    # Combine the sign, exponent, and man tissa to get the final binary representation
+    binary = exponent_bits + mantissa_bits
+    if (len(binary) > 8):
         errors("16", line)
-    return final_bin
+    return binary
 
 def Type_Floating(file_read_words: list[str], imm: str, line: str) -> str:
     return reg_addr[file_read_words[1]] + floating_to_bin(imm, line)

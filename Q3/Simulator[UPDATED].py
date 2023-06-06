@@ -43,19 +43,40 @@ def line_output() -> None:
         stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
     stdout.write("\n")
 
-def bin_to_floating(num: str) -> int:
-    lhs, rhs = num.split(".")
-    lhs_int = 0
-    rhs_int = 0
-    j = len(lhs) - 1
-    for i in range(len(lhs)):
-        lhs_int += int(lhs[j]) * 2**i
-        j -= 1
-    for i in range(1,len(rhs) + 1):
-        rhs_int += int(rhs[i - 1]) * 2**(-i)
-    
-    floating_number = lhs_int + rhs_int
-    return floating_number
+def bin_to_floating(binary: str) -> float:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if binary == '00000000':
+        return 0.0
+    elif binary == '01111000':
+        return float('inf')
+    elif binary == '11111000':
+        return float('-inf')
+    elif binary == '11111001':
+        return float('nan')
+
+    # Extract the sign, exponent, and mantissa bits
+    exponent_bits = binary[0:3]
+    mantissa_bits = binary[3:]
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Convert the exponent from binary to decimal
+    exponent = int(exponent_bits, 2) - bias
+
+    # Calculate the implicit leading 1 for the mantissa
+    implicit_leading = 1.0
+
+    # Convert the mantissa from binary to decimal
+    mantissa = 0.0
+    for i in range(len(mantissa_bits)):
+        bit = int(mantissa_bits[i])
+        mantissa += bit * (2**(-i - 1))
+
+    # Combine the sign, exponent, and mantissa to get the final floating-point number
+    result = implicit_leading * (1 + mantissa) * (2 ** exponent)
+
+    return result
 
 #converts binary to decimal
 def bin_to_dec(string: str) -> int:
