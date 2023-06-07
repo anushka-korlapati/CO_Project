@@ -28,7 +28,7 @@ for i in range(len(text)):
 #The final value in integer will be stored which will then convert to binary and be printed
 Reg_File = {'000' : 0, '001' : 0, '010' : 0, '011' : 0, '100' : 0, '101' : 0, '110' : 0, '111' : 0}
 
-Var_dict = dict()
+Var_dict = {new_list : [] for new_list in range(100)}
 
 #Just copying the inputs to the list defined above
 for i in range(len(commands)):
@@ -39,9 +39,96 @@ for i in range(len(commands)):
 def line_output() -> None:
     stdout.write(f"{dec_to_bin(PC,7)}        ")
     for register in Reg_File:
-        # print(Reg_File[register])
-        stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
+        if (type(Reg_File[register]) == float):
+            stdout.write(f"{floating_to_bin(Reg_File[register])} ")
+        else:
+            # print(Reg_File[register])
+            stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
     stdout.write("\n")
+
+def floating_to_bin(num: float) -> str:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if num == 0:
+        return '00000000'
+    elif num == float('inf'):
+        return '01111000'
+    elif num == float('-inf'):
+        return '11111000'
+    elif num != num:  # NaN check
+        return '11111001'
+
+    num = abs(num)
+
+    # Convert the number to binary
+    binary = ''
+    exponent = 0
+
+    if num < 1.0:
+        while num < 1.0:
+            num *= 2
+            exponent -= 1
+    else:
+        while num >= 2.0:
+            num /= 2
+            exponent += 1
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Calculate the biased exponent value
+    biased_exponent = exponent + bias
+
+    # Convert the exponent to binary
+    exponent_bits = bin(biased_exponent)[2:].zfill(3)
+
+    # Convert the mantissa to binary
+    mantissa_bits = ''
+    fraction = num - 1.0  # Remove the implicit leading 1
+    for i in range(5):
+        fraction *= 2
+        bit = int(fraction)
+        mantissa_bits += str(bit)
+        fraction -= bit
+
+    # Combine the sign, exponent, and mantissa to get the final binary representation
+    binary = exponent_bits + mantissa_bits
+    binary = binary.rjust(16,"0")
+    return binary
+
+def bin_to_floating(binary: str) -> float:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if binary == '00000000':
+        return 0.0
+    elif binary == '01111000':
+        return float('inf')
+    elif binary == '11111000':
+        return float('-inf')
+    elif binary == '11111001':
+        return float('nan')
+
+    # Extract the sign, exponent, and mantissa bits
+    exponent_bits = binary[0:3]
+    mantissa_bits = binary[3:]
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Convert the exponent from binary to decimal
+    exponent = int(exponent_bits, 2) - bias
+
+    # Calculate the implicit leading 1 for the mantissa
+    implicit_leading = 1.0
+
+    # Convert the mantissa from binary to decimal
+    mantissa = 0.0
+    for i in range(len(mantissa_bits)):
+        bit = int(mantissa_bits[i])
+        mantissa += bit * (2**(-i - 1))
+
+    # Combine the sign, exponent, and mantissa to get the final floating-point number
+    result = implicit_leading * (1 + mantissa) * (2 ** exponent)
+
+    return result
 
 #converts binary to decimal
 def bin_to_dec(string: str) -> int:
@@ -103,6 +190,9 @@ def right(reg: str,imm: str) -> None:
 def left(reg: str,imm: str) -> None:
     Reg_File[reg] = Reg_File[reg] << imm
 
+def mov_f(reg: str,imm: str) -> None:
+    Reg_File[reg] = bin_to_floating(imm)
+
 #Type C
 def mov_r(line: str) -> None:
     Reg_File[line[10:13]] = Reg_File[line[13:16]]
@@ -115,9 +205,9 @@ def bit_not(line: str) -> None:
     Reg_File[line[10:13]] = overflow + 1 + ~Reg_File[line[13:16]]
 
 def compare(line: str) -> None:
-    grt = Reg_File[line[10:13]] > Reg_File[line[13:16]]
+    ineq = Reg_File[line[10:13]] > Reg_File[line[13:16]]
     eq = Reg_File[line[10:13]] == Reg_File[line[13:16]]
-    if grt:
+    if (ineq):
         Reg_File['111'] += 2
     elif (eq):
         Reg_File['111'] += 1
@@ -127,12 +217,16 @@ def compare(line: str) -> None:
 #Type D
 def load(line: str) -> None:
     if (line[9:16] in Var_dict):
-        Reg_File[line[6:9]] = bin_to_dec(line[9:16])
+        Reg_File[line[6:9]] = (Var_dict[line[9:16]][0])
 
 def store(line: str) -> None:
     # print(dec_to_bin(Reg_File[(bin_to_dec(line[6:9]))],16))
-    mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
-    Var_dict[line[9:16]] = dec_to_bin(Reg_File[line[6:9]], 16)
+    if (type(Reg_File[line[6:9]]) == float):
+        mem[bin_to_dec(line[9:16])] = floating_to_bin(Reg_File[line[6:9]])
+        Var_dict[line[9:16]] = [Reg_File[line[6:9]], floating_to_bin(Reg_File[line[6:9]])]
+    else:
+        mem[bin_to_dec(line[9:16])] = dec_to_bin(Reg_File[line[6:9]], 16)
+        Var_dict[line[9:16]] = [Reg_File[line[6:9]], dec_to_bin(Reg_File[line[6:9]])]
 
 #Type E
 def unconditional_jump(line) -> None:
@@ -158,7 +252,8 @@ opcode = {"00000": [add,"A"],"00001":[sub,"A"],"00010":[mov_i,"B"],'00011':[mov_
           "00101":[store,"D"],"00110":[mul,"A"],"00111":[div,"C"],"01000":[right,"B"],
 		  "01001":[left,"B"],"01010":[xor,"A"],"01011":[or_,"A"],"01100":[and_,"A"],
 		  "01101":[bit_not,"C"],"01110":[compare,"C"],"01111":[unconditional_jump,"E"],"11100":[smaller,"E"],
-		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"]}
+		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"],"10000":[add,"A"],
+          "10001":[sub,"A"],"10010":[mov_f,"B"]}
 
 #here execution is done after splitting the line
 def execution(line: str) -> None:
@@ -171,6 +266,8 @@ def execution(line: str) -> None:
         line = opcode[code][0](line[7:10], line[10:13], line[13:16])
     elif (type == "B"):
         # print("2")
+        if (code == "10010"):
+            line = opcode[code][0](line[5:8], line[8:16])
         line = opcode[code][0](line[6:9], line[9:16])
     elif (type == "C"):
         # print("3")
@@ -197,8 +294,8 @@ while mem[PC] != "1101000000000000":
     else:
         PC=bin_to_dec(jump)
         jump=-1
+    # print(PC)
     # print(Reg_File['011'])
-
 
 line_output()
 for i in range(len(mem)):
