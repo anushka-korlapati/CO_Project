@@ -82,6 +82,7 @@ def bin_to_floating(binary: str) -> float:
 def bin_to_dec(string: str) -> int:
     result = 0
     j = 0
+    print(type(string))
     for i in range(len(string) - 1, -1,-1):
         result += int(string[i]) * 2**j
         j += 1
@@ -135,6 +136,12 @@ def add_i(reg: str,imm: str) -> None:
 def mul_i(reg: str, imm: str) -> None:
     Reg_File[reg] = Reg_File[reg] * bin_to_dec(imm)
 
+def div_i(reg: str, imm: str) -> None:
+    Reg_File[reg] = Reg_File[reg] / bin_to_dec(imm)
+
+def sub_i(reg: str, imm: str) -> None:
+    Reg_File[reg] = Reg_File[reg] - bin_to_dec(imm)
+
 def mov_i(reg: str,imm: str) -> None:
     Reg_File[reg] = bin_to_dec(imm)
 
@@ -149,16 +156,6 @@ def left(reg: str,imm: str) -> None:
 
 def mov_f(reg: str,imm: str) -> None:
     Reg_File[reg] = bin_to_floating(imm)
-
-def rotate_right(reg: str, imm: str) -> None:
-    num_bits = 16
-    mask = (1 << num_bits) - 1
-    Reg_File[reg] = bin_to_dec((reg >> bin_to_dec(imm)) | (reg << (num_bits - bin_to_dec(imm))) & mask)
-
-def rotate_left(reg: str, imm: str) -> None:
-    num_bits = 16
-    mask = (1 << num_bits) - 1
-    Reg_File[reg] = bin_to_dec((reg << bin_to_dec(imm)) | (reg >> (num_bits - bin_to_dec(imm))) & mask)
 
 #Type C
 def mov_r(line: str) -> None:
@@ -216,8 +213,8 @@ opcode = {"00000": [add,"A"],"00001":[sub,"A"],"00010":[mov_i,"B"],'00011':[mov_
 		  "01001":[left,"B"],"01010":[xor,"A"],"01011":[or_,"A"],"01100":[and_,"A"],
 		  "01101":[bit_not,"C"],"01110":[compare,"C"],"01111":[unconditional_jump,"E"],"11100":[smaller,"E"],
 		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"],"10000":[add,"A"],
-          "10001":[sub,"A"],"10010":[mov_f,"B"],"10011":[mod,"A"],"10100":[rotate_right,"B"],
-          "10101":[rotate_left,"B"],"10110":[add_i,"B"],"10111":[mul_i,"B"]}
+          "10001":[sub,"A"],"10010":[mov_f,"B"],"10011":[mod,"A"],"10100":[div_i,"B"],
+          "10101":[sub_i,"B"],"10110":[add_i,"B"],"10111":[mul_i,"B"]}
 
 #here execution is done after splitting the line
 def execution(line: str) -> None:
