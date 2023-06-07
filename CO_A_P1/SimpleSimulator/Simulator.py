@@ -43,19 +43,40 @@ def line_output() -> None:
         stdout.write(f"{dec_to_bin(Reg_File[register],16)} ")
     stdout.write("\n")
 
-def bin_to_floating(num: str) -> int:
-    lhs, rhs = num.split(".")
-    lhs_int = 0
-    rhs_int = 0
-    j = len(lhs) - 1
-    for i in range(len(lhs)):
-        lhs_int += int(lhs[j]) * 2**i
-        j -= 1
-    for i in range(1,len(rhs) + 1):
-        rhs_int += int(rhs[i - 1]) * 2**(-i)
-    
-    floating_number = lhs_int + rhs_int
-    return floating_number
+def bin_to_floating(binary: str) -> float:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if binary == '00000000':
+        return 0.0
+    elif binary == '01111000':
+        return float('inf')
+    elif binary == '11111000':
+        return float('-inf')
+    elif binary == '11111001':
+        return float('nan')
+
+    # Extract the sign, exponent, and mantissa bits
+    exponent_bits = binary[0:3]
+    mantissa_bits = binary[3:]
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Convert the exponent from binary to decimal
+    exponent = int(exponent_bits, 2) - bias
+
+    # Calculate the implicit leading 1 for the mantissa
+    implicit_leading = 1.0
+
+    # Convert the mantissa from binary to decimal
+    mantissa = 0.0
+    for i in range(len(mantissa_bits)):
+        bit = int(mantissa_bits[i])
+        mantissa += bit * (2**(-i - 1))
+
+    # Combine the sign, exponent, and mantissa to get the final floating-point number
+    result = implicit_leading * (1 + mantissa) * (2 ** exponent)
+
+    return result
 
 #converts binary to decimal
 def bin_to_dec(string: str) -> int:
@@ -104,16 +125,7 @@ def or_(r1: str,r2: str,r3: str) -> None:
 def and_(r1: str,r2: str,r3: str) -> None:
     Reg_File[r3] = Reg_File[r1] & Reg_File[r2]
 
-def mod(r1: str,r2: str,r3: str) -> None:
-    Reg_File[r3] = Reg_File[r1] % Reg_File[r2]
-
 #Type B
-def add_i(reg: str,imm: str) -> None:
-    Reg_File[reg] = Reg_File[reg] + bin_to_dec(imm)
-
-def mul_i(reg: str, imm: str) -> None:
-    Reg_File[reg] = Reg_File[reg] * bin_to_dec(imm)
-
 def mov_i(reg: str,imm: str) -> None:
     Reg_File[reg] = bin_to_dec(imm)
 
@@ -128,16 +140,6 @@ def left(reg: str,imm: str) -> None:
 
 def mov_f(reg: str,imm: str) -> None:
     Reg_File[reg] = bin_to_floating(imm)
-
-def rotate_right(reg: str, imm: str) -> None:
-    num_bits = 16
-    mask = (1 << num_bits) - 1
-    Reg_File[reg] = bin_to_dec((reg >> bin_to_dec(imm)) | (reg << (num_bits - bin_to_dec(imm))) & mask)
-
-def rotate_left(reg: str, imm: str) -> None:
-    num_bits = 16
-    mask = (1 << num_bits) - 1
-    Reg_File[reg] = bin_to_dec((reg << bin_to_dec(imm)) | (reg >> (num_bits - bin_to_dec(imm))) & mask)
 
 #Type C
 def mov_r(line: str) -> None:
@@ -195,8 +197,7 @@ opcode = {"00000": [add,"A"],"00001":[sub,"A"],"00010":[mov_i,"B"],'00011':[mov_
 		  "01001":[left,"B"],"01010":[xor,"A"],"01011":[or_,"A"],"01100":[and_,"A"],
 		  "01101":[bit_not,"C"],"01110":[compare,"C"],"01111":[unconditional_jump,"E"],"11100":[smaller,"E"],
 		  "11101":[greater,"E"],"11111":[equal,"E"],"11010":["hlt","F"],"10000":[add,"A"],
-          "10001":[sub,"A"],"10010":[mov_f,"B"],"10011":[mod,"A"],"10100":[rotate_right,"B"],
-          "10101":[rotate_left,"B"],"10110":[add_i,"B"],"10111":[mul_i,"B"]}
+          "10001":[sub,"A"],"10010":[mov_f,"B"]}
 
 #here execution is done after splitting the line
 def execution(line: str) -> None:
@@ -211,8 +212,7 @@ def execution(line: str) -> None:
         # print("2")
         if (code == "10010"):
             line = opcode[code][0](line[5:8], line[8:16])
-        else:
-            line = opcode[code][0](line[6:9], line[9:16])
+        line = opcode[code][0](line[6:9], line[9:16])
     elif (type == "C"):
         # print("3")
         line = opcode[code][0](line)

@@ -19,7 +19,8 @@ opcode = {"add": ["00000","A"],"sub":["00001","A"],"mov":["0001",""],"ld":["0010
 		  "st":["00101","D"],"mul":["00110","A"],"div":["00111","C"],"rs":["01000","B"],
 		  "ls":["01001","B"],"xor":["01010","A"],"or":["01011","A"],"and":["01100","A"],
 		  "not":["01101","C"],"cmp":["01110","C"],"jmp":["01111","E"],"jlt":["11100","E"],
-		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"]}
+		  "jgt":["11101","E"],"je":["11111","E"],"hlt":["11010","F"],"addf":["10000","A"],
+          "subf":["10001","A"],"movf":["10010","B"]}
 
 #registery dictionary with format {register : regcode}
 reg_addr = {"R0":"000", "R1":"001", "R2":"010",
@@ -32,21 +33,17 @@ error = {"1" : "Multiple hlt statements", "2" : "last instruction is not hlt",
          "6" : "variable not defined at start", "7" : "label not found",
          "8" : "Duplicate variable", "9" : "Duplicate label", "10" : "Invalid Syntax",
          "11" : "No hlt instruction found", "12" : "Variable used as label", "13" : "Label used as variable",
-         "14" : "Immediate value not found", "15" : "Invalid operation"}
+         "14" : "Immediate value not found", "15" : "Invalid operation", "16": "Flaoting Point Number exceeds 8 bit"}
 
 #exits the program while showing the line at which error is caused
 def errors(code: str, line: str = "-1") -> None:
     if (line == "-1"):
         # print(error[code] + "\nAssembly Halted")
         stdout.write(error[code] + "\nAssembly Halted\n")
-        with open("output.txt","w") as outline:
-            outline.write(error[code] + "\nAssembly Halted")
         stdout.close()
         exit()
     # print("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted\n")
-    with open("output.txt","w") as outline:
-        outline.write("Error at line " + line + ", " + error[code] + "\nAssembly Halted")
     stdout.close()
     exit()
 
@@ -65,8 +62,6 @@ def parsing(data: list[str]) -> tuple[dict[str,str], dict[str,str], dict[str,lis
                 errors("10", str(i + 1))
             if not var_start:
                 errors("6", str(i + 1))
-            if ln[1] in var_dict:
-                errors("8", str(i + 1))
             var_dict[ln[1]] = lin
             lin += 1
         #checks for a colon in the line, if present then check conditions for label and stores in label_dict
@@ -125,6 +120,59 @@ def Type_D(file_read_words: list[str], memaddr: str, var_dict: dict[str,str]) ->
 
 def Type_E(memaddr: str, label_dict: dict[str,str]) -> str:
     return "0000" + label_dict[memaddr[1]]
+
+def floating_to_bin(num: float, line: str) -> str:
+    # Check for special cases: 0, positive/negative infinity, and NaN
+    if num == 0:
+        return '00000000'
+    elif num == float('inf'):
+        return '01111000'
+    elif num == float('-inf'):
+        return '11111000'
+    elif num != num:  # NaN check
+        return '11111001'
+
+    num = abs(num)
+
+    # Convert the number to binary
+    binary = ''
+    exponent = 0
+
+    if num < 1.0:
+        while num < 1.0:
+            num *= 2
+            exponent -= 1
+    else:
+        while num >= 2.0:
+            num /= 2
+            exponent += 1
+
+    # Calculate the bias for the exponent
+    bias = 2**(3 - 1) - 1
+
+    # Calculate the biased exponent value
+    biased_exponent = exponent + bias
+
+    # Convert the exponent to binary
+    exponent_bits = bin(biased_exponent)[2:].zfill(3)
+
+    # Convert the mantissa to binary
+    mantissa_bits = ''
+    fraction = num - 1.0  # Remove the implicit leading 1
+    for i in range(5):
+        fraction *= 2
+        bit = int(fraction)
+        mantissa_bits += str(bit)
+        fraction -= bit
+
+    # Combine the sign, exponent, and mantissa to get the final binary representation
+    binary = exponent_bits + mantissa_bits
+    if (len(binary) > 8):
+        errors("16", line)
+    return binary
+
+def Type_Floating(file_read_words: list[str], imm: str, line: str) -> str:
+    return reg_addr[file_read_words[1]] + floating_to_bin(imm, line)
 
 def hlt() -> str:
     return "00000000000"
@@ -190,10 +238,12 @@ def main_process(var_dict: dict[str, str], label_dict: dict[str, str], op_dict: 
                     if flag_check(ln[1]):
                         errors("4", str(int(num) + 1))
                     errors("10", str(int(num) + 1))
+                elif ("." in ln[2][1:]):
+                    L.append(op + Type_Floating(ln, ln[2][1:], str(int(num) + 1)))
                 elif not immediate_val_chk(ln[2]):
                     errors("14", str(int(num) + 1))
                 else:
-                    L.append(op + Type_B(ln))
+                    L.append(op + Type_B(ln, ln[2][1:]))
             elif op_type == "C":
                 if len(ln) != 3:
                     # print(2)
@@ -232,10 +282,8 @@ def main():
     # print(commands)
     var_dict,label_dict,op_dict = parsing(commands)
     main_process(var_dict, label_dict, op_dict)
-    with open("output.txt","w") as outline:
-        for i in range(len(L)):
-            stdout.write(L[i] + "\n")
-            outline.write(L[i] + "\n")
+    for i in range(len(L)):
+        stdout.write(L[i] + "\n")
     stdout.close()
 
 main()
